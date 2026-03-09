@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz – Hojas en Excel 365</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Verdana,sans-serif;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.app{background:#fff;max-width:800px;width:95%;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+header{background:linear-gradient(135deg,#217346 0%,#2b8856 100%);color:#fff;padding:24px;text-align:center}
+main{padding:24px}
+.progress{margin-bottom:16px;font-weight:600;color:#217346}
+.question{font-size:1.2rem;margin-bottom:16px}
+.options{display:grid;gap:12px}
+.option-btn{padding:12px 14px;border-radius:10px;border:2px solid #217346;background:#f4f8f6;cursor:pointer;font-size:1rem;text-align:left;transition:.2s}
+.option-btn:hover{background:#e9f3ef}
+.option-btn.correct{background:#c8f7d2;border-color:#1f8f4a;color:#0f4d27}
+.option-btn.wrong{background:#ffd6d6;border-color:#c0392b;color:#7b1d14}
+.feedback{margin-top:16px;padding:12px;border-radius:10px;display:none}
+.feedback.correct{background:#eafaf1;color:#1f8f4a;border:1px solid #1f8f4a}
+.feedback.wrong{background:#fff0f0;color:#c0392b;border:1px solid #c0392b}
+.controls{margin-top:20px;display:flex;justify-content:space-between;align-items:center}
+button#nextBtn{background:#217346;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:1rem;cursor:pointer;display:none}
+button#restartBtn{background:#2a5298;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:1rem;cursor:pointer;display:none}
+.score{font-weight:700}
+footer{text-align:center;padding:12px;color:#666;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<h1>🧠 Quiz – Autorrellenar en Excel 365</h1>
+<p>Selecciona la respuesta answer en cada q</p>
+</header>
+<main>
+<div class="progress" id="progress"></div>
+<div class="question" id="question"></div>
+<div class="options" id="options"></div>
+<div class="feedback" id="feedback"></div>
+<div class="controls">
+<div class="score" id="score"></div>
+<button id="nextBtn">Siguiente</button>
+<button id="restartBtn">Reiniciar quiz</button>
+</div>
+</main>
+<footer>
+Curso: Microsoft Excel 365 - Funciones y Herramientas Esenciales
+</footer>
+</div>
+
+<script>
+const questions = [
+
+{
+q: "¿Qué es Autorrellenar en Excel 365?",
+options: [
+"Una función que copia o extiende patrones de datos al arrastrar el controlador de relleno",
+"Una herramienta para crear gráficos automáticamente",
+"Una función para ordenar datos",
+"Un comando para borrar celdas"
+],
+answer: 0
+},
+
+{
+q: "¿Dónde se encuentra el controlador de relleno?",
+options: [
+"En la esquina superior izquierda de la celda",
+"En la esquina inferior derecha de la celda seleccionada",
+"En el centro de la celda",
+"En la barra de fórmulas"
+],
+answer: 1
+},
+
+{
+q: "¿Qué ocurre cuando pasas el cursor sobre el controlador de relleno?",
+options: [
+"El cursor cambia a una cruz negra delgada",
+"El cursor desaparece",
+"El cursor cambia a una mano",
+"El cursor cambia a una flecha azul"
+],
+answer: 0
+},
+
+{
+q: "¿Cuál de las siguientes es una capacidad del Autorrellenar?",
+options: [
+"Eliminar hojas automáticamente",
+"Extender series numéricas como 1, 2, 3, 4",
+"Crear gráficos dinámicos",
+"Proteger celdas automáticamente"
+],
+answer: 1
+},
+
+{
+q: "¿Qué sucede si arrastras el controlador desde una sola celda que contiene un número?",
+options: [
+"Excel crea automáticamente una serie",
+"Excel copia el mismo valor en las celdas",
+"Excel elimina el valor",
+"Excel convierte el número en texto"
+],
+answer: 1
+},
+
+{
+q: "¿Cuántas celdas se necesitan como mínimo para que Excel detecte automáticamente un patrón numérico?",
+options: [
+"1 celda",
+"2 celdas",
+"3 celdas",
+"5 celdas"
+],
+answer: 1
+},
+
+{
+q: "¿Qué tecla debes mantener presionada para crear una serie numérica desde una sola celda?",
+options: [
+"Shift",
+"Alt",
+"Ctrl",
+"Tab"
+],
+answer: 2
+},
+
+{
+q: "¿Qué tipo de datos puede extender automáticamente Excel con Autorrellenar?",
+options: [
+"Solo números",
+"Solo texto",
+"Fechas, días de la semana y meses",
+"Solo fórmulas"
+],
+answer: 2
+},
+
+{
+q: "¿Qué ocurre cuando copias una fórmula con Autorrellenar ?",
+options: [
+"La fórmula se elimina",
+"La referencia cambia automáticamente según la fila o columna",
+"La fórmula se bloquea",
+"Los valores se convierten en texto"
+],
+answer: 1
+},
+
+{
+q: "¿Qué permite hacer el botón 'options de autorrelleno' después de arrastrar el controlador?",
+options: [
+"Cambiar entre copiar celdas o rellenar una serie",
+"Eliminar los datos creados",
+"Insertar nuevas columnas",
+"Ordenar los datos automáticamente"
+],
+answer: 0
+}
+
+];
+
+let shuffled = [];
+let current = 0;
+let score = 0;
+let answered = false;
+
+function shuffle(array){
+return array.map(v=>({v,sort:Math.random()})).sort((a,b)=>a.sort-b.sort).map(({v})=>v);
+}
+
+function startQuiz(){
+shuffled = shuffle(questions);
+current = 0;
+score = 0;
+document.getElementById('restartBtn').style.display='none';
+loadQuestion();
+}
+
+function loadQuestion(){
+answered = false;
+const q = shuffled[current];
+document.getElementById('progress').textContent = `Pregunta ${current+1} de ${shuffled.length}`;
+document.getElementById('question').textContent = q.q;
+const optionsDiv = document.getElementById('options');
+optionsDiv.innerHTML = '';
+q.options.forEach((opt,i)=>{
+const btn = document.createElement('button');
+btn.className = 'option-btn';
+btn.textContent = opt;
+btn.onclick = ()=>selectAnswer(i,btn);
+optionsDiv.appendChild(btn);
+});
+const fb = document.getElementById('feedback');
+fb.style.display='none';
+fb.className='feedback';
+document.getElementById('nextBtn').style.display='none';
+document.getElementById('score').textContent = `Puntaje: ${score}`;
+}
+
+function selectAnswer(index,btn){
+if(answered) return;
+answered = true;
+const q = shuffled[current];
+const buttons = document.querySelectorAll('.option-btn');
+buttons.forEach(b=>b.disabled=true);
+const fb = document.getElementById('feedback');
+
+if(index === q.answer){
+btn.classList.add('correct');
+fb.textContent = '✅ Respuesta correcta';
+fb.classList.add('correct');
+score++;
+}else{
+btn.classList.add('wrong');
+buttons[q.answer].classList.add('correct');
+fb.textContent = `❌ Respuesta incorrecta. La respuesta correcta es: ${q.options[q.answer]}`;
+fb.classList.add('wrong');
+}
+fb.style.display='block';
+document.getElementById('score').textContent = `Puntaje: ${score}`;
+document.getElementById('nextBtn').style.display='inline-block';
+}
+
+function nextQuestion(){
+current++;
+if(current < shuffled.length){
+loadQuestion();
+}else{
+showResults();
+}
+}
+
+function showResults(){
+document.getElementById('question').textContent = '🎉 Quiz finalizado';
+document.getElementById('options').innerHTML = '';
+document.getElementById('progress').textContent = '';
+const fb = document.getElementById('feedback');
+fb.style.display='block';
+fb.className='feedback correct';
+fb.textContent = `Obtuviste ${score} de ${shuffled.length} respuestas correctas.`;
+document.getElementById('nextBtn').style.display='none';
+document.getElementById('restartBtn').style.display='inline-block';
+}
+
+// Eventos
+document.getElementById('nextBtn').onclick = nextQuestion;
+document.getElementById('restartBtn').onclick = startQuiz;
+
+startQuiz();
+</script>
+</body>
+</html>
